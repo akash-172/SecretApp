@@ -4,7 +4,7 @@ const express = require("express");
 const ejs = require("ejs");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const encrypt = require("mongoose-encryption");
+const md5 = require("md5");
 
 // create app instance of Express.JS framework
 const app = express();
@@ -23,10 +23,6 @@ const userSchema = new mongoose.Schema({
     password: String
 });
 
-// During save, documents are encrypted and then signed. 
-// During find, documents are authenticated and then decrypted
-
-userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
 const User = mongoose.model("User", userSchema);
 
@@ -43,7 +39,7 @@ app.get("/register", function(req, res) {
 
 app.post("/register", (req, res) => {
     const email = req.body.username;
-    const password = req.body.password;
+    const password = md5(req.body.password);
     registerFun();
     async function registerFun() {
         try {
@@ -56,7 +52,7 @@ app.post("/register", (req, res) => {
 });
 app.post("/login", (req, res) => {
     const email = req.body.username;
-    const password = req.body.password;
+    const password = md5(req.body.password);
     loginFun();
     async function loginFun() {
         try {
