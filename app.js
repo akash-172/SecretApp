@@ -34,7 +34,8 @@ async function main() {
 const userSchema = new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: String
 });
 
 // Add plugin to schema
@@ -108,12 +109,21 @@ app.get("/register", function(req, res) {
     res.render("register");
 });
 app.get("/secrets", function(req, res) {
+    findFun().catch(err => console.log(err));
+    async function findFun() {
+        const usersFound = await User.find({secret: {$ne: null}});
+        res.render("secrets", {usersWithSecrets: usersFound});
+    };
+});
+
+app.get("/submit", function(req, res) {
     if (req.isAuthenticated()) {
-        res.render("secrets");
+        res.render("submit");
     } else {
         res.redirect("/login");
     }
 });
+
 app.get("/logout", function(req, res) {
     req.logout(function(err) {
         if (err) { return next(err); }
@@ -153,6 +163,15 @@ app.post("/login", (req, res) => {
     });
 });
 
+app.post("/submit", (req, res) => {
+    async function updateFun() {
+        const user = await User.findById(req.user.id);
+        user.secret = req.body.secret;
+        user.save();
+    };
+    updateFun().catch(err => console.log(err));
+    res.redirect("/secrets");
+});
 
 
 app.listen(3000, function() {
